@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Editor</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+
+    #editor-container {
+      display: flex;
+      justify-content: space-between;
+      width: 80%;
+      position: relative;
+    }
+
+    #text-box {
+      flex-grow: 1;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-right: 10px;
+      min-height: 200px;
+      position: relative;
+      background-color: rgba(255, 255, 255, 0.863); 
+      
+    }
+    #draggable-text {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+      white-space: nowrap;
+      background-color: #65c6f3; 
+      padding: 5px;
+      border: 1px solid #336699;
+      border-radius: 5px;
+      color: white; 
+    }
+
+    #toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #custom-font-size {
+      width: 50px;
+      overflow-x: auto;
+    }
+    #custom-font-size-input {
+      overflow-x: auto;
+      border: 1px solid #ccc;
+      padding: 5px;
+      width: 50px;
+      max-height: 20px;
+      white-space: nowrap; 
+    }
+    button {
+      padding: 10px;
+      background-color: #39b7e9; 
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #4682B4; 
+    }
+  </style>
+
+</head>
+<body>
+    <h1>Text Editor</h1>
+  <div id="editor-container">
+    <div id="text-box" contenteditable="true" onclick="startWriting(event)" onmousedown="startDragging(event)" onmousemove="dragText(event)" onmouseup="stopDragging(event)">
+    </div>
+    <div id="toolbar">
+      <button onclick="undo()">Undo</button>
+      <button onclick="redo()">Redo</button>
+      <button onclick="save()">Save</button>
+      <label for="font-family">Font:</label>
+      <select id="font-family" onchange="changeFont(this.value)">
+        <option value="Arial">Arial</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+        <option value="Impact">Impact</option>
+        <option value="Lucida Console">Lucida Console</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+        <option value="Palatino Linotype">Palatino Linotype</option>
+        <option value="Garamond">Garamond</option>
+        <option value="Book Antiqua">Book Antiqua</option>
+        <option value="Arial Black">Arial Black</option>
+        <option value="Copperplate">Copperplate</option>
+        <option value="Franklin Gothic Medium">Franklin Gothic Medium</option>
+        <option value="Brush Script MT">Brush Script MT</option>
+        <option value="Impact">Impact</option>
+        <option value="Monotype Corsiva">Monotype Corsiva</option>
+        <option value="Courier">Courier</option>
+      </select>
+      <label for="font-size">Size:</label>
+      <select id="font-size" onchange="changeFontSize(this.value)">
+        <option value="12px">12px</option>
+        <option value="16px">16px</option>
+        <option value="20px">20px</option>
+        <option value="24px">24px</option>
+        <option value="32px">32px</option>
+        <option value="40px">40px</option>
+        <option value="48px">48px</option>
+        <option value="60px">60px</option>
+        
+      </select>
+      <label for="custom-font-size">Custom Size:</label>
+      <input type="text" id="custom-font-size" placeholder="e.g., 18" oninput="changeCustomFontSize(this.value)">
+      <label for="font-color">Color:</label>
+      <input type="color" id="font-color" onchange="changeFontColor(this.value)">
+      <label for="background-color">Background Color:</label>
+      <input type="color" id="background-color" onchange="changeBackgroundColor(this.value)">
+      <button onclick="toggleBold()">Bold</button>
+      <button onclick="toggleItalic()">Italic</button>
+      <button onclick="toggleUnderline()">Underline</button>
+      <button onclick="highlightText()">Highlight</button>
+    </div>
+  </div>
+
+  <script>
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    function startDragging(event) {
+        if (event.target.classList.contains('draggable-text')) {
+    isDragging = true;
+    offsetX = event.clientX - event.target.getBoundingClientRect().left;
+    offsetY = event.clientY - event.target.getBoundingClientRect().top;
+
+    currentDraggableText = event.target;
+
+    document.addEventListener('mousemove', dragText);
+    document.addEventListener('mouseup', stopDragging);
+
+    event.preventDefault();
+  }
+}
+
+function dragText(event) {
+  if (isDragging && currentDraggableText) {
+    const textBoundingBox = currentDraggableText.getBoundingClientRect();
+    const textBoxBoundingBox = document.getElementById('text-box').getBoundingClientRect();
+
+    const x = Math.min(Math.max(event.clientX - offsetX, textBoxBoundingBox.left), textBoxBoundingBox.right - textBoundingBox.width);
+    const y = Math.min(Math.max(event.clientY - offsetY, textBoxBoundingBox.top), textBoxBoundingBox.bottom - textBoundingBox.height);
+
+    currentDraggableText.style.left = `${x - textBoxBoundingBox.left}px`;
+    currentDraggableText.style.top = `${y - textBoxBoundingBox.top}px`;
+  }
+}
+
+
+
+function stopDragging() {
+  isDragging = false;
+  currentDraggableText = null;
+
+  document.removeEventListener('mousemove', dragText);
+  document.removeEventListener('mouseup', stopDragging);
+}
+
+    
+
+function startWriting(event) {
+  const x = event.clientX - document.getElementById('text-box').getBoundingClientRect().left;
+  const y = event.clientY - document.getElementById('text-box').getBoundingClientRect().top;
+
+  const newTextNode = document.createElement('div');
+  newTextNode.classList.add('draggable-text');
+  newTextNode.style.position = 'absolute';
+  newTextNode.style.left = `${x}px`;
+  newTextNode.style.top = `${y}px`;
+  newTextNode.style.cursor = 'move';
+  newTextNode.style.userSelect = 'none';
+  newTextNode.style.whiteSpace = 'nowrap';
+  newTextNode.contentEditable = true;
+  newTextNode.innerHTML = '&nbsp;';  
+
+  newTextNode.addEventListener('mousedown', function(event) {
+    startDragging(event);
+  });
+
+  document.getElementById('text-box').appendChild(newTextNode);
+
+  const range = document.createRange();
+  range.selectNodeContents(newTextNode);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+    //document.getElementById('text-box').addEventListener('mousemove', dragText);
+    function placeCursor(event) {
+            if (!isDragging) {
+                const x = event.clientX - document.getElementById('text-box').getBoundingClientRect().left;
+                const y = event.clientY - document.getElementById('text-box').getBoundingClientRect().top;
+
+                const range = document.caretRangeFromPoint(x, y);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                // Set the current draggable text to the selected text
+                currentDraggableText = range.startContainer.parentNode;
+
+                document.getElementById('draggable-text').focus();
+            }
+        }
+
+    function undo() {
+      document.execCommand('undo', false, null);
+    }
+
+    function redo() {
+      document.execCommand('redo', false, null);
+    }
+
+    function save() {
+    const content = document.getElementById('text-box').innerHTML;
+    const blob = new Blob([content], { type: 'text/html' });t
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+    function changeFont(font) {
+      document.execCommand('fontName', false, font);
+    }
+
+    function changeFontSize(size) {
+      document.execCommand('fontSize', false, size);
+    }
+
+    function changeCustomFontSize(size) {
+      const fontSizeValue = size.trim() === '' ? 'inherit' : `${size}px`;
+      document.getElementById('text-box').style.fontSize = fontSizeValue;
+    }
+
+    function changeFontColor(color) {
+      document.execCommand('foreColor', false, color);
+    }
+    function changeBackgroundColor(color) {
+        document.getElementById('text-box').style.backgroundColor = color;
+    }
+    function toggleBold() {
+      document.execCommand('bold', false, null);
+    }
+
+    function toggleItalic() {
+      document.execCommand('italic', false, null);
+    }
+
+    function toggleUnderline() {
+      document.execCommand('underline', false, null);
+    }
+
+    function highlightText() {
+      document.execCommand('hiliteColor', false, 'yellow');
+    }   
+  </script>
+</body>
+</html>
